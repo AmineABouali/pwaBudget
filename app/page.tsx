@@ -104,10 +104,6 @@ export default function Home() {
         <NavContent />
 
         <div className="mt-auto pt-6 border-t border-slate-800">
-          <div className="flex items-center gap-3 text-sm text-slate-500">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span>System Online</span>
-          </div>
           <p className="text-xs text-slate-600 mt-2">v1.0.0</p>
         </div>
       </aside>
