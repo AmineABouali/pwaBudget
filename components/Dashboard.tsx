@@ -1,7 +1,9 @@
 "use client"
 
 import { useEffect, useState, useMemo } from 'react'
-import { db, type Transaction } from '@/lib/db'
+import { db } from '@/lib/db'
+import { withTimeout } from '@/lib/utils'
+import type { Transaction } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { 
   Wallet, 
@@ -44,7 +46,7 @@ export function Dashboard() {
 
   async function loadData() {
     try {
-      const txs = await db.getTransactions()
+      const txs = await withTimeout(db.getTransactions(), 4000, 'Loading transactions timed out')
       setTransactions(txs)
     } catch (error) {
       console.error('Failed to load transactions:', error)

@@ -4,12 +4,20 @@ import { useEffect, useState } from 'react'
 import { Wifi, WifiOff, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
+type SyncCapableServiceWorkerRegistration = ServiceWorkerRegistration & {
+  sync: {
+    register(tag: string): Promise<void>
+  }
+}
+
 export function OfflineIndicator() {
   const [isOnline, setIsOnline] = useState(true)
   const [isSyncing, setIsSyncing] = useState(false)
+  const [canSync, setCanSync] = useState(false)
 
   useEffect(() => {
     setIsOnline(navigator.onLine)
+    void updateSyncAvailability()
 
     const handleOnline = () => setIsOnline(true)
     const handleOffline = () => setIsOnline(false)
@@ -23,19 +31,30 @@ export function OfflineIndicator() {
     }
   }, [])
 
+  async function updateSyncAvailability() {
+    if (!('serviceWorker' in navigator) || !('SyncManager' in window)) {
+      setCanSync(false)
+      return
+    }
+
+    const registration = await navigator.serviceWorker.getRegistration()
+    setCanSync(Boolean(registration && 'sync' in registration))
+  }
+
   const handleSync = async () => {
     if (!('serviceWorker' in navigator)) return
 
     setIsSyncing(true)
     try {
-      const registration = await navigator.serviceWorker.ready
-      if ('sync' in registration) {
-        await registration.sync.register('sync-transactions')
+      const registration = await navigator.serviceWorker.getRegistration()
+      if (registration && 'sync' in registration) {
+        await (registration as SyncCapableServiceWorkerRegistration).sync.register('sync-transactions')
       }
     } catch (error) {
       console.error('Sync failed:', error)
     } finally {
-      setTimeout(() => setIsSyncing(false), 1000)
+      setIsSyncing(false)
+      void updateSyncAvailability()
     }
   }
 
@@ -53,10 +72,11 @@ export function OfflineIndicator() {
       variant="ghost" 
       size="sm" 
       onClick={handleSync}
+      disabled={!canSync || isSyncing}
       className="text-slate-400 hover:text-slate-100"
     >
       <RefreshCw className={`h-4 w-4 mr-1 ${isSyncing ? 'animate-spin' : ''}`} />
-      <span className="hidden sm:inline">Sync</span>
+      <span className="hidden sm:inline">{isSyncing ? 'Syncing...' : 'Sync'}</span>
     </Button>
   )
 }

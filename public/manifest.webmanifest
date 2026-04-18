@@ -1,17 +1,13 @@
 {
+  "id": "/",
   "name": "BudgetPro - Smart Budget Management",
   "short_name": "BudgetPro",
-  "id": "/",
   "description": "Offline-first budget tracking with AI categorization. Manage your finances seamlessly across all devices.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#3b82f6",
-  "orientation": "portrait-primary",
-  "scope": "/",
-  "lang": "en",
-  "dir": "ltr",
-  "categories": ["finance", "productivity", "utilities"],
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
@@ -37,23 +33,5 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ],
-  "shortcuts": [
-    {
-      "name": "Add Transaction",
-      "short_name": "Add",
-      "description": "Quickly add a new transaction",
-      "url": "/?tab=transactions",
-      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "View Budgets",
-      "short_name": "Budgets",
-      "description": "Check your budget status",
-      "url": "/?tab=budgets",
-      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
-    }
-  ],
-  "related_applications": [],
-  "prefer_related_applications": false
+  ]
 }

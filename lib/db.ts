@@ -1,6 +1,41 @@
 import Dexie, { Table } from 'dexie'
 import type { Transaction, Budget, Category } from '@/types'
 
+type SyncCapableServiceWorkerRegistration = ServiceWorkerRegistration & {
+  sync: {
+    register(tag: string): Promise<void>
+  }
+}
+
+async function requestBackgroundSync(tag: string) {
+  if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('SyncManager' in window)) {
+    return
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.getRegistration()
+    if (!registration || !('sync' in registration)) {
+      return
+    }
+
+    await (registration as SyncCapableServiceWorkerRegistration).sync.register(tag)
+  } catch (error) {
+    console.log('Background sync not supported')
+  }
+}
+
+function isRecoverableDatabaseError(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false
+  }
+
+  return (
+    error.name === 'OpenFailedError' ||
+    error.name === 'InvalidStateError' ||
+    error.message.includes('Backend aborted')
+  )
+}
+
 class BudgetDatabase extends Dexie {
   transactions!: Table<Transaction>
   budgets!: Table<Budget>
@@ -13,6 +48,36 @@ class BudgetDatabase extends Dexie {
       budgets: '++id, category, period, syncStatus',
       categories: '++id, name'
     })
+    this.version(2)
+      .stores({
+        transactions: '++id, type, category, date, syncStatus',
+        budgets: '++id, category, period, syncStatus',
+        categories: '++id, name'
+      })
+    this.version(3)
+      .stores({
+        transactions: '++id, type, category, date, syncStatus',
+        budgets: '++id, category, period, syncStatus',
+        categories: '++id, name'
+      })
+      .upgrade(async (tx) => {
+        const categoriesTable = tx.table('categories')
+        const existingCategories = await categoriesTable.toArray() as Category[]
+        const uniqueCategories = new Map<string, Category>()
+        const duplicateIds: number[] = []
+
+        for (const category of existingCategories) {
+          if (!uniqueCategories.has(category.name)) {
+            uniqueCategories.set(category.name, category)
+          } else if (typeof category.id === 'number') {
+            duplicateIds.push(category.id)
+          }
+        }
+
+        for (const id of duplicateIds) {
+          await categoriesTable.delete(id)
+        }
+      })
   }
 
   async addTransaction(transaction: Omit<Transaction, 'id' | 'syncStatus' | 'createdAt' | 'updatedAt'>) {
@@ -24,16 +89,7 @@ class BudgetDatabase extends Dexie {
     }
 
     const id = await this.transactions.add(tx)
-
-    // Trigger background sync if available
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'SyncManager' in window) {
-      try {
-        const registration = await navigator.serviceWorker.ready
-        await registration.sync.register('sync-transactions')
-      } catch (error) {
-        console.log('Background sync not supported')
-      }
-    }
+    void requestBackgroundSync('sync-transactions')
 
     return id
   }
@@ -44,15 +100,7 @@ class BudgetDatabase extends Dexie {
       syncStatus: 'pending',
       updatedAt: new Date()
     })
-
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      try {
-        const registration = await navigator.serviceWorker.ready
-        await registration.sync.register('sync-transactions')
-      } catch (error) {
-        console.log('Background sync not supported')
-      }
-    }
+    void requestBackgroundSync('sync-transactions')
   }
 
   async deleteTransaction(id: number) {
@@ -146,10 +194,19 @@ class BudgetDatabase extends Dexie {
   }
 
   async getCategories() {
-    return await this.categories.toArray()
+    const categories = await this.categories.toArray()
+    return categories.filter((category, index, list) =>
+      list.findIndex(item => item.name === category.name) === index
+    )
   }
 
   async addCategory(category: Omit<Category, 'id'>) {
+    const existingCategory = await this.categories.where('name').equals(category.name).first()
+    if (existingCategory?.id) {
+      await this.categories.update(existingCategory.id, category)
+      return existingCategory.id
+    }
+
     return await this.categories.add(category)
   }
 
@@ -194,6 +251,7 @@ class BudgetDatabase extends Dexie {
 }
 
 export const db = new BudgetDatabase()
+let initializationPromise: Promise<void> | null = null
 
 // Default categories
 const defaultCategories: Omit<Category, 'id'>[] = [
@@ -210,15 +268,44 @@ const defaultCategories: Omit<Category, 'id'>[] = [
 ]
 
 export async function initializeDatabase() {
+  if (initializationPromise) {
+    return initializationPromise
+  }
+
+  initializationPromise = initializeDatabaseInternal(false)
+
+  return initializationPromise
+}
+
+async function initializeDatabaseInternal(hasRetried: boolean): Promise<void> {
   try {
-    const count = await db.categories.count()
-    if (count === 0) {
-      await db.categories.bulkAdd(defaultCategories)
-      console.log('Database initialized with default categories')
+    if (!db.isOpen()) {
+      await db.open()
+    }
+
+    const existingCategoryNames = new Set((await db.getCategories()).map((category) => category.name))
+
+    for (const category of defaultCategories) {
+      if (!existingCategoryNames.has(category.name)) {
+        await db.categories.add(category)
+      }
     }
   } catch (error) {
+    initializationPromise = null
     console.error('Failed to initialize database:', error)
+
+    if (!hasRetried && isRecoverableDatabaseError(error)) {
+      db.close()
+      await Dexie.delete('BudgetProDB')
+
+      initializationPromise = initializeDatabaseInternal(true)
+      return initializationPromise
+    }
+
+    throw error
   }
+
+  return
 }
 
 export default db

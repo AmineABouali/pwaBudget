@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description: 'Offline-first budget tracking with AI categorization. Manage your finances across web, mobile, and desktop.',
   keywords: ['budget', 'finance', 'PWA', 'offline', 'expense tracking'],
   authors: [{ name: 'BudgetPro' }],
-  manifest: '/manifest.json',
+  manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',

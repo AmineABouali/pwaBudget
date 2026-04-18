@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { db, type Category } from '@/lib/db'
+import { db } from '@/lib/db'
+import type { Category } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,7 +15,7 @@ import {
 } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/components/ui/use-toast'
-import { Plus, Camera, Mic, ArrowRightLeft } from 'lucide-react'
+import { Plus, Camera, Mic, ArrowRightLeft, TrendingUp } from 'lucide-react'
 
 export function TransactionForm() {
   const { toast } = useToast()
@@ -39,6 +40,8 @@ export function TransactionForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (loading) return
+
     if (!formData.category || !formData.amount || !formData.description) {
       toast({
         title: "Missing fields",
@@ -89,6 +92,10 @@ export function TransactionForm() {
     }
     return !['Income', 'Investments'].includes(cat.name)
   })
+
+  const uniqueCategories = filteredCategories.filter((category, index, list) =>
+    list.findIndex(item => item.name === category.name) === index
+  )
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -180,7 +187,7 @@ export function TransactionForm() {
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-700">
-                  {filteredCategories.map(cat => (
+                  {uniqueCategories.map(cat => (
                     <SelectItem 
                       key={cat.id} 
                       value={cat.name}
@@ -253,5 +260,3 @@ export function TransactionForm() {
     </div>
   )
 }
-
-import { TrendingUp } from 'lucide-react'

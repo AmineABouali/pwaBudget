@@ -125,7 +125,7 @@ budget-pro-pwa/
 
 ### Offline & Storage
 - **Dexie.js** - IndexedDB wrapper for local storage
-- **next-pwa** - PWA configuration and service worker
+- **Service Workers** - Native PWA registration and offline caching
 - **Service Workers** - Background sync and caching
 
 ### Development Tools

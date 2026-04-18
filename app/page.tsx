@@ -20,23 +20,27 @@ import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 
 export default function Home() {
-  const [isReady, setIsReady] = useState(false)
+  const [initError, setInitError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState('dashboard')
 
   useEffect(() => {
-    initializeDatabase().then(() => setIsReady(true))
-  }, [])
+    let isMounted = true
 
-  if (!isReady) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950">
-        <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
-          <p className="text-slate-400">Loading...</p>
-        </div>
-      </div>
-    )
-  }
+    void initializeDatabase()
+      .catch((error) => {
+        console.error('App initialization failed:', error)
+        if (isMounted) {
+          setInitError('Storage initialization failed. The app is running in limited mode.')
+        }
+      })
+      .finally(() => {
+        return
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const NavContent = () => (
     <>
@@ -144,6 +148,12 @@ export default function Home() {
 
         {/* Content */}
         <div className="flex-1 container mx-auto px-4 py-6 max-w-6xl">
+          {initError && (
+            <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+              {initError}
+            </div>
+          )}
+
           <InstallPrompt />
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">

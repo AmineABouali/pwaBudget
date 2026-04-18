@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { db, type Budget, type Category } from '@/lib/db'
+import { db } from '@/lib/db'
+import type { Budget, Category } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -33,10 +34,15 @@ export function BudgetManager() {
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [currentMonth] = useState(new Date())
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    category: string
+    limit: string
+    period: Budget['period']
+    rollover: boolean
+  }>({
     category: '',
     limit: '',
-    period: 'monthly' as const,
+    period: 'monthly',
     rollover: false
   })
 

@@ -1,0 +1,48 @@
+ ⚠ Port 3000 is in use by process 11124, using available port 3002 instead.
+ ⨯ [Error: ENOSPC: no space left on device, write] {
+  errno: -4055,
+  code: 'ENOSPC',
+  syscall: 'write'
+}
+[Error: ENOSPC: no space left on device, write] {
+  errno: -4055,
+  code: 'ENOSPC',
+  syscall: 'write'
+}
+[Error: ENOSPC: no space left on device, write] {
+  errno: -4055,
+  code: 'ENOSPC',
+  syscall: 'write'
+}
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOSPC: no space left on device, open 'C:\pwa\pwaBudget\.next\cache\webpack\client-development-fallback\0.pack.gz_'
+[Error: ENOSPC: no space left on device, write] {
+  errno: -4055,
+  syscall: 'write',
+  code: 'ENOSPC'
+}
+ ⨯ uncaughtException: [Error: ENOSPC: no space left on device, write] {
+  errno: -4055,
+  syscall: 'write',
+  code: 'ENOSPC'
+}
+ ⨯ uncaughtException:  [Error: ENOSPC: no space left on device, write] {
+  errno: -4055,
+  syscall: 'write',
+  code: 'ENOSPC'
+}
+ ⨯ [Error: ENOSPC: no space left on device, write] {
+  errno: -4055,
+  code: 'ENOSPC',
+  syscall: 'write'
+}
+[Error: ENOSPC: no space left on device, write] {
+  errno: -4055,
+  code: 'ENOSPC',
+  syscall: 'write'
+}
+[Error: ENOSPC: no space left on device, write] {
+  errno: -4055,
+  code: 'ENOSPC',
+  syscall: 'write'
+}
+^C^C

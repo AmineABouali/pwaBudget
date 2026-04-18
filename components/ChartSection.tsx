@@ -1,5 +1,5 @@
-import type { Transaction } from "@/components/TransactionForm";
-import { currency } from "@/lib/utils";
+import type { Transaction } from "@/types";
+import { formatCurrency } from "@/lib/utils";
 
 type ChartSectionProps = {
   transactions: Transaction[];
@@ -31,7 +31,7 @@ export default function ChartSection({ transactions }: ChartSectionProps) {
               }}
             >
               <span>{category}</span>
-              <span>{currency(amount)}</span>
+              <span>{formatCurrency(amount)}</span>
             </div>
             <div
               style={{
