@@ -5,6 +5,7 @@ const STATIC_ASSETS = [
   APP_SHELL,
   OFFLINE_FALLBACK,
   "/manifest.webmanifest",
+  "/manifest.json",
   "/icons/icon-192x192.png",
   "/icons/icon-512x512.png",
 ];
